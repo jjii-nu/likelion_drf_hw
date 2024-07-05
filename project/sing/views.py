@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from .models import Singer, Song, Tag
+from .models import Singer, Song, Tag, Image
 from .serializer import SingerSerializer, SongSerializer, TagSerializer
 
 from django.shortcuts import get_object_or_404
@@ -29,9 +29,14 @@ def singer_list_create(request):
                     tag = Tag(name = t)
                     tag.save()
                 singer.tag.add(tag)
-            singer.save()
-            return Response(data=SingerSerializer(singer).data)
+        
+        if 'images' in request.FILES:
+            for image in request.FILES.getlist('images'):
+                Image.objects.create(singer=singer, image=image)
 
+        singer.save()
+        return Response(data=SingerSerializer(singer).data)
+    
 @api_view(['GET','PATCH','DELETE'])
 def singer_detail_update_delete(request, singer_id):
     singer = get_object_or_404(Singer, id=singer_id)
@@ -55,8 +60,14 @@ def singer_detail_update_delete(request, singer_id):
                     tag = Tag(name = t)
                     tag.save()
                 singer.tag.add(tag)
+            
+            if 'images' in request.FILES:
+                singer.images.all().delete()  # 기존 이미지를 삭제하고 새로 추가하려는 경우
+                for image in request.FILES.getlist('images'):
+                    Image.objects.create(singer=singer, image=image)
             singer.save()
         return Response(serializer.data)
+
     
     elif request.method == 'DELETE':
         singer.delete()

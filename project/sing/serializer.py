@@ -1,6 +1,12 @@
 from rest_framework import serializers
 from .models import *
 
+#다중이미지구현코드추가
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ['id','image']
+#여기까지
 class SingerSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
 
@@ -16,9 +22,9 @@ class SingerSerializer(serializers.ModelSerializer):
         return [tag.name for tag in tags]
     class Meta:
         model = Singer
-        fields = ['id','name','content','tag','debut','songs','image']
+        fields = ['id','name','content','tag','debut','songs','images']
 
-    image = serializers.ImageField(use_url=True, required=False)
+    images = ImageSerializer(many=True, read_only=True)
 
 class SongSerializer(serializers.ModelSerializer):
 
